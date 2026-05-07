@@ -30,23 +30,27 @@ function EntryRow({ entry, schedules, vehicleId, onEdit, onDelete, deleting }: {
   deleting?: number | null
 }) {
   const [expanded, setExpanded] = useState(false)
-  const schedule = schedules.find((s) => s.id === entry.schedule_id)
+
+  // Resolve the schedule objects linked to this entry
+  const linkedSchedules = schedules.filter((s) => entry.schedule_ids.includes(s.id))
+  const isScheduled = linkedSchedules.length > 0
+
   const date = new Date(entry.performed_at + 'T00:00:00')
 
   return (
     <Box sx={{ display: 'flex', gap: 2 }}>
-      {/* Timeline line */}
+      {/* Timeline dot + line */}
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 32, flexShrink: 0, pt: 0.5 }}>
         <Box
           sx={{
             width: 28, height: 28, borderRadius: '50%',
-            backgroundColor: schedule ? 'primary.main' : 'action.selected',
+            backgroundColor: isScheduled ? 'primary.main' : 'action.selected',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
-            boxShadow: schedule ? '0 0 8px rgba(245,158,11,0.4)' : 'none',
+            boxShadow: isScheduled ? '0 0 8px rgba(245,158,11,0.4)' : 'none',
           }}
         >
-          <BuildIcon sx={{ fontSize: 14, color: schedule ? '#0f1117' : 'text.secondary' }} />
+          <BuildIcon sx={{ fontSize: 14, color: isScheduled ? '#0f1117' : 'text.secondary' }} />
         </Box>
         <Box sx={{ width: 1, flexGrow: 1, backgroundColor: 'divider', mt: 0.5 }} />
       </Box>
@@ -57,9 +61,17 @@ function EntryRow({ entry, schedules, vehicleId, onEdit, onDelete, deleting }: {
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
               <Typography variant="subtitle2" fontWeight={700}>{entry.title}</Typography>
-              {schedule && (
-                <Chip label="Scheduled" size="small" sx={{ height: 16, fontSize: '0.6rem' }} variant="outlined" color="primary" />
-              )}
+              {/* Show a chip per linked schedule item */}
+              {linkedSchedules.map((s) => (
+                <Chip
+                  key={s.id}
+                  label={s.name}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  sx={{ height: 16, fontSize: '0.6rem' }}
+                />
+              ))}
             </Stack>
             <Typography variant="caption" color="text.secondary">
               {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}

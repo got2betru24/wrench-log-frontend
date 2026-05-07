@@ -78,7 +78,8 @@ export interface EntryAttachment {
 export interface MaintenanceEntry {
   id: number
   vehicle_id: number
-  schedule_id: number | null
+  /** IDs of schedule items serviced by this entry (replaces single schedule_id) */
+  schedule_ids: number[]
   title: string
   notes: string | null
   odometer: number | null
@@ -91,7 +92,8 @@ export interface MaintenanceEntry {
 }
 
 export interface EntryCreate {
-  schedule_id?: number | null
+  /** Schedule items completed during this service visit */
+  schedule_ids?: number[]
   title: string
   notes?: string | null
   odometer?: number | null
@@ -100,7 +102,16 @@ export interface EntryCreate {
   performed_at: string
 }
 
-export interface EntryUpdate extends Partial<EntryCreate> {}
+export interface EntryUpdate {
+  /** When provided, replaces the full set of linked schedules */
+  schedule_ids?: number[]
+  title?: string
+  notes?: string | null
+  odometer?: number | null
+  cost?: string | null
+  shop_name?: string | null
+  performed_at?: string
+}
 
 // ─────────────────────────────────────────
 // Health / Dashboard
