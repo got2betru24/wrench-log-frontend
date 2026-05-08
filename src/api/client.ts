@@ -5,16 +5,15 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-client.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      'An unexpected error occurred'
-    return Promise.reject(new Error(message))
+// For FormData bodies, remove the Content-Type header so the browser can set
+// multipart/form-data with the correct boundary automatically. Without this,
+// the global application/json default overrides it and the server can't parse
+// the multipart body.
+client.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
   }
-)
+  return config
+})
 
 export default client

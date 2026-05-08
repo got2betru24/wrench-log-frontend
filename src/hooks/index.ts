@@ -198,3 +198,17 @@ export function useDeleteEntry(vehicleId: number) {
     },
   })
 }
+
+export function useImportEntriesCsv(vehicleId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ file, skipErrors = false }: { file: File; skipErrors?: boolean }) =>
+      entriesApi.importCsv(vehicleId, file, skipErrors),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.entries(vehicleId) })
+      qc.invalidateQueries({ queryKey: qk.mileage(vehicleId) })
+      qc.invalidateQueries({ queryKey: qk.vehicleHealth(vehicleId) })
+      qc.invalidateQueries({ queryKey: qk.dashboard })
+    },
+  })
+}

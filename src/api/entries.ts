@@ -1,6 +1,16 @@
 import client from './client'
 import type { MaintenanceEntry, EntryCreate, EntryUpdate, MileagePoint } from '../types'
 
+export interface ImportResult {
+  imported: number
+  skipped: number
+}
+
+export interface ImportRowError {
+  row: number
+  errors: string[]
+}
+
 export const entriesApi = {
   list: (vehicleId: number, limit = 50, offset = 0) =>
     client
@@ -19,6 +29,17 @@ export const entriesApi = {
   delete: (entryId: number) =>
     client.delete(`/entries/${entryId}`),
 
+  importCsv: (vehicleId: number, file: File, skipErrors = false) => {
+    const form = new FormData()
+    form.append('file', file)
+    return client
+      .post<ImportResult>(`/vehicles/${vehicleId}/entries/import`, form, {
+        params: skipErrors ? { skip_errors: true } : undefined,
+        // No Content-Type override — Axios sets multipart/form-data + boundary automatically
+      })
+      .then((r) => r.data)
+  },
+
   mileageHistory: (vehicleId: number) =>
     client.get<MileagePoint[]>(`/vehicles/${vehicleId}/mileage`).then((r) => r.data),
 
@@ -26,9 +47,7 @@ export const entriesApi = {
     const form = new FormData()
     form.append('file', file)
     return client
-      .post(`/entries/${entryId}/attachments`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      .post(`/entries/${entryId}/attachments`, form)
       .then((r) => r.data)
   },
 

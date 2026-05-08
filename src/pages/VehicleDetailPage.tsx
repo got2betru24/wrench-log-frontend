@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Box, Typography, Grid, Stack, Button, IconButton, Tooltip,
   Tabs, Tab, Paper, Chip, Divider, CircularProgress, Alert,
-  Breadcrumbs, Link, Menu, MenuItem, ListItemIcon,
+  Breadcrumbs, Link, Menu, MenuItem, ListItemIcon, Snackbar,
 } from '@mui/material'
 import {
   ArrowBack as BackIcon, Edit as EditIcon,
@@ -11,6 +11,7 @@ import {
   Speed as SpeedIcon, MoreVert as MoreIcon,
   Archive as ArchiveIcon, Delete as DeleteIcon,
   Error as ErrorIcon, Warning as WarningIcon,
+  FileUpload as FileUploadIcon,
 } from '@mui/icons-material'
 import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom'
 import {
@@ -20,6 +21,7 @@ import {
 } from '../hooks'
 import EntryTimeline from '../components/entries/EntryTimeline'
 import EntryForm from '../components/entries/EntryForm'
+import ImportEntriesDialog from '../components/entries/ImportEntriesDialog'
 import ScheduleManager from '../components/schedule/ScheduleManager'
 import MileageChart from '../components/entries/MileageChart'
 import ScoreGauge from '../components/shared/ScoreGauge'
@@ -53,6 +55,8 @@ export default function VehicleDetailPage() {
   const [deleteVehicleOpen, setDeleteVehicleOpen] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importSnack, setImportSnack] = useState<string | null>(null)
 
   if (vehicleLoading) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}><CircularProgress /></Box>
@@ -239,14 +243,31 @@ export default function VehicleDetailPage() {
       {tab === 'timeline' && (
         entriesLoading
           ? <CircularProgress size={24} />
-          : <EntryTimeline
-              entries={entries}
-              schedules={schedules}
-              vehicleId={vehicleId}
-              onEdit={handleEditEntry}
-              onDelete={handleDeleteEntry}
-              deleting={deletingEntryId}
-            />
+          : (
+            <>
+              {entries.length !== 0 && (
+                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Typography variant="h6">History</Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<FileUploadIcon />}
+                    onClick={() => setImportOpen(true)}
+                  >
+                    Import CSV
+                  </Button>
+                </Stack>
+              )}
+              <EntryTimeline
+                entries={entries}
+                schedules={schedules}
+                vehicleId={vehicleId}
+                onEdit={handleEditEntry}
+                onDelete={handleDeleteEntry}
+                deleting={deletingEntryId}
+              />
+            </>
+          )
       )}
 
       {/* Schedule tab */}
@@ -316,6 +337,30 @@ export default function VehicleDetailPage() {
           )}
         </Grid>
       )}
+
+      {/* Import dialog */}
+      <ImportEntriesDialog
+        open={importOpen}
+        vehicleId={vehicleId}
+        onClose={() => setImportOpen(false)}
+        onSuccess={(imported, skipped) => {
+          setImportOpen(false)
+          setImportSnack(
+            skipped > 0
+              ? `${imported} entries imported, ${skipped} skipped due to errors.`
+              : `${imported} entries imported successfully.`
+          )
+        }}
+      />
+      <Snackbar
+        open={!!importSnack}
+        autoHideDuration={5000}
+        onClose={() => setImportSnack(null)}
+      >
+        <Alert severity="success" onClose={() => setImportSnack(null)}>
+          {importSnack}
+        </Alert>
+      </Snackbar>
 
       {/* Delete vehicle confirm */}
       <ConfirmDialog
