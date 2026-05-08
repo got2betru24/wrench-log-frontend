@@ -245,7 +245,7 @@ export default function VehicleDetailPage() {
           ? <CircularProgress size={24} />
           : (
             <>
-              {entries.length !== 0 && (
+              {entries.length === 0 && (
                 <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
                   <Typography variant="h6">History</Typography>
                   <Button
